@@ -10,7 +10,7 @@ from src.probe import classify
     [
         (200, 120, "ok"),
         (204, 10, "ok"),
-        (301, 50, "ok"),  # a redirect is not an outage
+        (301, 50, "down"),  # a redirect is not an outage
         (200, 1000, "slow"),  # exactly on the threshold counts as slow
         (200, 4200, "slow"),
         (404, 30, "down"),
