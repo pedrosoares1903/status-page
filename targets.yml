@@ -1,0 +1,9 @@
+# The services this page watches.
+# Adding a service is a one-line change — which makes it a good first pull request.
+targets:
+  - name: GitHub API
+    url: https://api.github.com
+  - name: Python Package Index
+    url: https://pypi.org
+  - name: Wikipedia
+    url: https://www.wikipedia.org
