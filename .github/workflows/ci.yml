@@ -63,9 +63,34 @@ jobs:
         run: python main.py
 
       - name: Upload the site
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: site-${{ github.sha }}
           path: public/
-          retention-days: 30
-          if-no-files-found: error
+
+  deploy:
+    name: Deploy to Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    needs: build
+
+    # Deploying is the only thing in this repository that changes the outside
+    # world, so it gets its own permissions and nothing else does.
+    permissions:
+      pages: write      # call the Pages deployment API
+      id-token: write   # prove to GitHub that this run is who it says it is
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    # One deployment at a time. A second push while this runs waits its turn
+    # instead of racing it.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
