@@ -4,6 +4,11 @@ on:
   pull_request:
   push:
     branches: [main]
+  # The page goes stale on its own: every hour, check again and republish.
+  schedule:
+    - cron: "17 * * * *"
+  # And a button, for when you want it now.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -42,8 +47,9 @@ jobs:
 
     # The site is only ever built from code that already passed.
     needs: check
-    # ...and only on main. A pull request must not produce a release artifact.
-    if: github.event_name == 'push'
+    # Everything except a pull request: a PR must not publish anything.
+    # This now also covers the scheduled run and the manual button.
+    if: github.event_name != 'pull_request'
 
     steps:
       - uses: actions/checkout@v4
