@@ -1,14 +1,10 @@
 name: CI
 
-# Runs on every pull request, and on main after a merge.
-# Deliberately does NOT run main.py: that probes third-party services, and a
-# pull request must never go red because someone else's website had a bad day.
 on:
   pull_request:
   push:
     branches: [main]
 
-# Least privilege: this workflow only ever reads the repository.
 permissions:
   contents: read
 
@@ -30,7 +26,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
-      # Cheapest checks first: these fail in seconds if something is wrong.
       - name: Lint
         run: ruff check .
 
@@ -39,3 +34,38 @@ jobs:
 
       - name: Tests
         run: python -m pytest -q
+
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # The site is only ever built from code that already passed.
+    needs: check
+    # ...and only on main. A pull request must not produce a release artifact.
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      # Only the application's dependencies. ruff and pytest have no business
+      # being here: this job builds, it does not verify.
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate the page
+        run: python main.py
+
+      - name: Upload the site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-${{ github.sha }}
+          path: public/
+          retention-days: 30
+          if-no-files-found: error
